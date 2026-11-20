@@ -1,0 +1,9 @@
+:root{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif;color:#17233b;background:#f5f7fb}
+*{box-sizing:border-box}body{margin:0}main{padding:18px 16px 26px;max-width:520px;margin:auto}
+header{display:flex;align-items:center;gap:10px}.mark{font-size:30px;color:#175fce}h1{font-size:18px;margin:0 0 3px}small{color:#64748b}
+.hint{font-size:13px;line-height:1.65;color:#485872;margin:18px 0 10px}.ribbon-hint{font-size:12px;line-height:1.55;color:#175fce;background:#eaf2ff;border-radius:8px;padding:9px 10px;margin:0 0 14px}
+button{font:inherit;border:1px solid #cbd5e1;background:#fff;border-radius:8px;padding:10px 12px;cursor:pointer;text-align:left;color:#17233b}
+button:hover{background:#eff5ff}button:disabled{opacity:.5;cursor:wait}.primary{background:#1768df;color:#fff;border-color:#1768df;font-weight:600}.primary:hover{background:#0758ca}
+.danger{color:#ad2d2d}.secondary{font-size:12px;padding:7px 10px;margin-top:8px}.state{margin:16px 0 8px;font-weight:600;font-size:13px;color:#0c6a43}
+.state.error{color:#a82323}pre{white-space:pre-wrap;word-break:break-word;font:12px/1.6 ui-monospace,SFMono-Regular,Menlo,monospace;background:#fff;border:1px solid #e0e6ee;border-radius:8px;padding:12px;min-height:100px;margin:0}
+.footnote{color:#64748b;font-size:11px;line-height:1.5}
