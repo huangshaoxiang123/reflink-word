@@ -34,13 +34,21 @@
     return /^RLX_[A-Za-z0-9_]{1,35}$/.test(String(name || "")) && String(name).length <= 40;
   }
 
-  // Keep the newest selection while a host round-trip is in flight. Start
-  // immediately; repeated events must not reset a trailing debounce timer.
+  // Keep the newest selection while a host round-trip is in flight. Optional
+  // short coalesceMs merges back-to-back click events (e.g. mousedown + mouseup
+  // on a Word field) so the first lookup is not cancelled halfway and rerun.
   function createSelectionQueue(options) {
     var running = false;
     var pending = false;
     var revision = 0;
+    var timer = null;
+    var coalesceMs = Number(options.coalesceMs) > 0 ? Number(options.coalesceMs) : 0;
+    var schedule = options.setTimeout || (typeof setTimeout === "function" ? setTimeout : null);
+    var cancel = options.clearTimeout || (typeof clearTimeout === "function" ? clearTimeout : null);
+
     async function drain() {
+      timer = null;
+      if (running) return;
       running = true;
       try {
         while (pending) {
@@ -61,7 +69,13 @@
     return function selectionChanged() {
       revision += 1;
       pending = true;
-      if (!running) return drain();
+      if (running) return;
+      if (coalesceMs > 0 && schedule) {
+        if (timer !== null && cancel) cancel(timer);
+        timer = schedule(function flush() { drain(); }, coalesceMs);
+        return;
+      }
+      return drain();
     };
   }
 

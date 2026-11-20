@@ -221,7 +221,7 @@
     root.Office.actions.associate("reflinkDiagnostics", reflinkDiagnostics);
     commandsAssociated = true;
   }
-  var onSelectionChanged = root.RefLinkWordLogic.createSelectionQueue({
+  var queuedSelectionChanged = root.RefLinkWordLogic.createSelectionQueue({
     canRun: function () { return !busy && !activeDialog && adapter.isEnabled(); },
     follow: function (isCurrent) { return adapter.followSelection(isCurrent); },
     onResult: async function (moved) {
@@ -238,6 +238,10 @@
     },
     onError: function (error) { display("跳转检查失败：" + String(error.message || error), true); }
   });
+  function onSelectionChanged() {
+    if (adapter.consumeSelectionEcho && adapter.consumeSelectionEcho()) return;
+    return queuedSelectionChanged();
+  }
 
   associateCommands();
   root.Office.onReady(async function ready(info) {

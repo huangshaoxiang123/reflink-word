@@ -9,11 +9,13 @@
   else root.RefLinkWord = api;
 }(typeof globalThis !== "undefined" ? globalThis : this, function buildAdapter(root, core, logic) {
   "use strict";
-  var VERSION = "0.4.0";
+  var VERSION = "0.4.1";
+  var SELF_ECHO_WINDOW_MS = 400;
   var state = {
     enabled: false, jumping: false, attempts: 0, successes: 0, lastError: "",
     targets: Object.create(null), referenceNumbers: Object.create(null),
-    lastJumpMs: 0, lastJumpPath: "", recentAttempts: [], probe: "", outcome: ""
+    lastJumpMs: 0, lastJumpPath: "", recentAttempts: [], probe: "", outcome: "",
+    ignoreEchoUntil: 0
   };
 
   function resetFastCache() {
@@ -292,16 +294,27 @@
     await context.sync();
 
     var candidates = directFields.items.length ? directFields.items : paragraphFields.items;
+    var selectedText = String(selection.text || "");
     state.probe = "域 " + directFields.items.length + "/" + paragraphFields.items.length +
-      "，选区长度 " + String(selection.text || "").length;
-    candidates.forEach(function loadCandidate(field) {
+      "，选区长度 " + selectedText.length;
+    if (!candidates.length) return null;
+
+    var comparisons = [];
+    var preExpanded = [];
+    var canPreExpand = selectedText === "";
+    candidates.forEach(function loadCandidate(field, idx) {
       field.load("code");
       field.result.load("text");
+      comparisons[idx] = field.result.compareLocationWith(selection);
+      if (canPreExpand && typeof field.result.expandToOrNullObject === "function") {
+        var expanded = field.result.expandToOrNullObject(selection);
+        expanded.load("text");
+        preExpanded[idx] = expanded;
+      } else {
+        preExpanded[idx] = null;
+      }
     });
-    var comparisons = candidates.map(function compare(field) {
-      return field.result.compareLocationWith(selection);
-    });
-    if (candidates.length) await context.sync();
+    await context.sync();
 
     // Field delimiters may separate a collapsed caret from result even when
     // no visible character separates it from the superscript. Do not accept
@@ -314,11 +327,11 @@
       if (code.indexOf(core.CITATION_MARKER) < 0) continue;
       var relation = String(comparisons[i].value);
       if (!logic.selectionInsideCitation(
-        relation, String(candidates[i].result.text || ""), String(selection.text || "")
+        relation, String(candidates[i].result.text || ""), selectedText
       )) {
-        if (String(selection.text || "") === "" && /^(Before|After)$/.test(relation) &&
+        if (selectedText === "" && /^(Before|After)$/.test(relation) &&
             /^\d+(?:\s*[,，\-–—]\s*\d+)*$/.test(String(candidates[i].result.text || ""))) {
-          edges.push({ field: candidates[i], relation: relation });
+          edges.push({ field: candidates[i], relation: relation, expanded: preExpanded[i] });
         }
         continue;
       }
@@ -338,11 +351,15 @@
       }
     }
     if (edges.length) {
+      var needExpandSync = false;
       edges.forEach(function (edge) {
-        edge.expanded = edge.field.result.expandToOrNullObject(selection);
-        edge.expanded.load("text");
+        if (!edge.expanded) {
+          edge.expanded = edge.field.result.expandToOrNullObject(selection);
+          edge.expanded.load("text");
+          needExpandSync = true;
+        }
       });
-      await context.sync();
+      if (needExpandSync) await context.sync();
       var exact = edges.filter(function (edge) {
         return !edge.expanded.isNullObject && edge.expanded.text === edge.field.result.text;
       });
@@ -479,10 +496,26 @@
         if (!target) { state.outcome = "缺少目标缓存"; return false; }
 
         var destination = documentObject.getBookmarkRangeOrNullObject(target.bookmarkName);
+        var tryDirectSelect = destination.isNullObject !== true;
         destination.load("$none");
-        await context.sync();
+        if (tryDirectSelect) {
+          // Fast path: resolve and select the bookmark in a single IPC sync.
+          destination.select("Start");
+        }
+        var bookmarkMissing = false;
+        if (tryDirectSelect) {
+          try {
+            await context.sync();
+            bookmarkMissing = Boolean(destination.isNullObject);
+          } catch (selectError) {
+            bookmarkMissing = true;
+          }
+        } else {
+          await context.sync();
+          bookmarkMissing = true;
+        }
         if (!stillCurrent()) return false;
-        if (destination.isNullObject) {
+        if (bookmarkMissing) {
           // Zotero Refresh rebuilds the bibliography and removes RLX_ bookmarks.
           // Rebuild just the clicked entry on demand without touching the citation field.
           var recovered = await recoverMissingBookmark(
@@ -495,11 +528,11 @@
             state.outcome = "目标书签失效";
             return false;
           }
-          destination = recovered.range;
+          recovered.range.select("Start");
+          await context.sync();
           state.lastJumpPath = citation.path + "+recovered";
         }
-        destination.select("Start");
-        await context.sync();
+        state.ignoreEchoUntil = Date.now() + SELF_ECHO_WINDOW_MS;
         state.successes += 1;
         state.outcome = "跳转成功";
         state.lastError = "";
@@ -549,11 +582,21 @@
     };
   }
 
+  function consumeSelectionEcho() {
+    if (state.ignoreEchoUntil > 0 && Date.now() < state.ignoreEchoUntil) {
+      state.ignoreEchoUntil = 0;
+      return true;
+    }
+    state.ignoreEchoUntil = 0;
+    return false;
+  }
+
   return {
     VERSION: VERSION,
     check: function check() { return analyze(false); },
     enable: function enable() { return analyze(true); },
     followSelection: followSelection,
+    consumeSelectionEcho: consumeSelectionEcho,
     restoreFromDocument: restoreFromDocument,
     pause: function pause() { state.enabled = false; },
     clear: clear,
