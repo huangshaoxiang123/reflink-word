@@ -9,7 +9,7 @@
   else root.RefLinkWord = api;
 }(typeof globalThis !== "undefined" ? globalThis : this, function buildAdapter(root, core, logic) {
   "use strict";
-  var VERSION = "0.4.1";
+  var VERSION = "0.4.2";
   var SELF_ECHO_WINDOW_MS = 400;
   var state = {
     enabled: false, jumping: false, attempts: 0, successes: 0, lastError: "",
@@ -496,22 +496,15 @@
         if (!target) { state.outcome = "缺少目标缓存"; return false; }
 
         var destination = documentObject.getBookmarkRangeOrNullObject(target.bookmarkName);
-        var tryDirectSelect = destination.isNullObject !== true;
         destination.load("$none");
-        if (tryDirectSelect) {
-          // Fast path: resolve and select the bookmark in a single IPC sync.
-          destination.select("Start");
-        }
+        // Fast path: resolve and select the bookmark in a single IPC sync.
+        // Never touch destination.isNullObject before context.sync() (Office.js throws PropertyNotLoaded).
+        destination.select("Start");
         var bookmarkMissing = false;
-        if (tryDirectSelect) {
-          try {
-            await context.sync();
-            bookmarkMissing = Boolean(destination.isNullObject);
-          } catch (selectError) {
-            bookmarkMissing = true;
-          }
-        } else {
+        try {
           await context.sync();
+          bookmarkMissing = Boolean(destination.isNullObject);
+        } catch (selectError) {
           bookmarkMissing = true;
         }
         if (!stillCurrent()) return false;
