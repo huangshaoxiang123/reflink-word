@@ -1,5 +1,14 @@
-:root{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif;color:#17233b;background:#f5f7fb}
+:root{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei UI",sans-serif;color:#17233b;background:#f5f7fb}
 *{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center}main{width:min(92vw,540px);padding:18px 22px;text-align:center}
 .badge{width:46px;height:46px;border-radius:14px;margin:0 auto 9px;display:grid;place-items:center;background:linear-gradient(145deg,#1768df,#1149a7);color:#fff;font-size:26px;font-weight:800;box-shadow:0 7px 18px rgba(23,104,223,.24)}
-.badge.error{background:linear-gradient(145deg,#e25353,#a92727)}h1{font-size:19px;margin:0 0 11px}pre{margin:0;text-align:left;white-space:pre-wrap;word-break:break-word;font:13px/1.52 -apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif;background:#fff;border:1px solid #dce4ef;border-radius:11px;padding:12px 14px;max-height:56vh;overflow:auto;box-shadow:0 4px 14px rgba(31,50,79,.06)}
-.buttons{display:flex;justify-content:flex-end;gap:9px;margin-top:12px}button{font:inherit;border:1px solid #c8d3e1;border-radius:9px;padding:8px 18px;cursor:pointer}.primary{color:#fff;background:#1768df;border-color:#1768df}.secondary{background:#fff;color:#34445d}.danger{color:#fff;background:#c83d3d;border-color:#c83d3d}button:hover{filter:brightness(.96)}
+.badge.error{background:linear-gradient(145deg,#e25353,#a92727)}h1{font-size:19px;margin:0 0 11px}pre{margin:0;text-align:left;white-space:pre-wrap;word-break:break-word;font:13px/1.52 -apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei UI",sans-serif;background:#fff;border:1px solid #dce4ef;border-radius:11px;padding:12px 14px;max-height:56vh;overflow:auto;box-shadow:0 4px 14px rgba(31,50,79,.06)}
+.activate-panel{text-align:left;background:#fff;border:1px solid #dce4ef;border-radius:11px;padding:14px 16px;box-shadow:0 4px 14px rgba(31,50,79,.06)}
+.device-box{background:#f3f7fd;border:1px solid #d5e2f5;border-radius:9px;padding:10px 12px}
+.device-label{font-size:12px;color:#51627d;margin-bottom:6px}
+.device-row{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.device-row code{font:700 15px/1.3 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;color:#1149a7;letter-spacing:.4px;user-select:all}
+.activate-hint{margin:11px 0 9px;font-size:13px;line-height:1.5;color:#273852}
+.activate-input{width:100%;font:12.5px/1.45 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;border:1px solid #c8d3e1;border-radius:9px;padding:9px 11px;resize:vertical}
+.activate-input:focus{outline:none;border-color:#1768df;box-shadow:0 0 0 3px rgba(23,104,223,.14)}
+.activate-error{margin-top:8px;font-size:12.5px;color:#c83d3d;background:#fff1f1;border:1px solid #f5c2c2;border-radius:8px;padding:7px 10px}
+.buttons{display:flex;justify-content:flex-end;gap:9px;margin-top:12px}button{font:inherit;border:1px solid #c8d3e1;border-radius:9px;padding:8px 18px;cursor:pointer}button.small{padding:5px 11px;font-size:12px}.primary{color:#fff;background:#1768df;border-color:#1768df}.secondary{background:#fff;color:#34445d}.danger{color:#fff;background:#c83d3d;border-color:#c83d3d}button:hover{filter:brightness(.96)}
